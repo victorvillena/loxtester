@@ -76,8 +76,7 @@ class JloxTest extends munit.FunSuite:
       .map(_.split("// ").toSeq(1).replace("[java ", "["))
       TestCategory.Errors(expected)
     else
-      TestCategory.Skip
-      // TODO should-work tests
+      TestCategory.ShouldWork
 
   // TODO parametrize
   // TODO check with spaces in path
@@ -121,7 +120,8 @@ class JloxTest extends munit.FunSuite:
           assertEquals(result.code, errorCode)
           assertEquals(result.err, errors)
 
-        case TestCategory.ShouldWork => ???
+        case TestCategory.ShouldWork =>
+          assertEquals(result.code, 0)
 
         case TestCategory.Skip =>
           // Do nothing
