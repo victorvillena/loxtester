@@ -1,7 +1,7 @@
 package eu.willena.loxtester
 
 import java.io.{ByteArrayOutputStream, PrintWriter}
-import scala.sys.process
+import scala.sys.{error, process}
 
 case class LoxTestFile(path: os.Path, category: TestCategory)
 case class LoxTestResult(out: Seq[String], err: Seq[String], code: Int)
@@ -54,7 +54,10 @@ class JloxTest extends munit.FunSuite:
   def categorize(test: os.Path) =
     val expectedMarker = "// expect: "
     val runtimeErrorMarker = "// expect runtime error: "
-    val staticErrorMarker = "// \\["
+    val staticErrorRegex = "^.*// \\[line.*"
+    val jloxStaticErrorRegex = "^.*// \\[java line.*"
+    val staticErrorMarker = "// [line"
+    val jloxStaticErrorMarker = "// [java line"
 
     val contents = os.read.lines(test)
     if contents.exists(_.matches(s"^.*$runtimeErrorMarker.*")) then
@@ -64,11 +67,15 @@ class JloxTest extends munit.FunSuite:
       TestCategory.RuntimeError(error.head)
     else if contents.exists(_.matches(s"^.*$expectedMarker.*")) then
       val expected = contents
-      .filter(_.contains(expectedMarker))
-      .map(_.split(expectedMarker).toSeq(1))
+        .filter(_.contains(expectedMarker))
+        .map(_.split(expectedMarker).toSeq(1))
       TestCategory.ExpectedOutputs(expected)
+    else if contents.exists(s => s.matches(staticErrorRegex) || s.matches(jloxStaticErrorRegex)) then
+      val expected = contents
+      .filter(s => s.contains(staticErrorMarker) || s.contains(jloxStaticErrorMarker))
+      .map(_.split("// ").toSeq(1).replace("[java ", "["))
+      TestCategory.Errors(expected)
     else
-      // TODO static errors
       TestCategory.Skip
       // TODO should-work tests
 
@@ -110,7 +117,10 @@ class JloxTest extends munit.FunSuite:
           // runtime error will be on the next-to-last line. Line info is the last line.
           assertEquals(result.err(result.err.length - 2), error)
 
-        case TestCategory.Errors(errors) => ???
+        case TestCategory.Errors(errors) =>
+          assertEquals(result.code, errorCode)
+          assertEquals(result.err, errors)
+
         case TestCategory.ShouldWork => ???
 
         case TestCategory.Skip =>
