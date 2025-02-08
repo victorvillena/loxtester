@@ -90,7 +90,7 @@ abstract class LoxTest(
     val segments = p.relativeTo(testsBasePath).segments
     skipList.exists(segments.contains) || segments.exists(_.startsWith("."))
 
-  val loxTestFiles = os.walk(testsBasePath, skip = skippedPaths).filter(os.isFile)
+  val loxTestFiles = os.walk(testsBasePath, skip = skippedPaths).filter(os.isFile).filter(_.last.endsWith(".lox"))
 
   val loxTests = loxTestFiles.map: file =>
     LoxTestFile(file, categorize(file))
