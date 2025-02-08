@@ -1,4 +1,4 @@
-package eu.willena.loxtester
+package org.willena.loxtester
 
 import scala.sys.{error, process}
 

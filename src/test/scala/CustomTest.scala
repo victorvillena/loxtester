@@ -1,4 +1,4 @@
-package eu.willena.loxtester
+package org.willena.loxtester
 
 class CustomTest extends LoxTest(
   loxCommand = sys.props.get("test.command").get,
