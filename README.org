@@ -1,0 +1,25 @@
+* Loxtester
+
+Test Lox implementations against the Lox test suite.
+
+** Requirements
+- A modern JVM
+- A recent-ish version of sbt
+
+** Usage
+There is a Makefile with some helper commands. Of course, keeping sbt alive
+between runs is faster, but the Makefile is convenient.
+
+** Features
+- Run the entire Lox suite against a Lox implementation
+
+** Why this instead of the main repo
+The original test suite is implemented in Dart 2. Dart 2 seems to not be
+compatible with Dart 3, making it a hassle to install in modern development
+environments. There are options such as virtualization, or deterministic builds,
+but the quickest option for me was to reimplement the suite in a language I
+could run. Thus, Scala and sbt.
+
+Some features of the original test suite are missing. This suite can't run "all
+tests up to a certain chapter of the book". It could be done, but it's a lot of
+grunt work.
