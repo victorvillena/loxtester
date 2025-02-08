@@ -1,7 +1,8 @@
 package eu.willena.loxtester
 
-import java.io.{ByteArrayOutputStream, PrintWriter}
 import scala.sys.{error, process}
+
+import java.io.{ByteArrayOutputStream, PrintWriter}
 
 case class LoxTestFile(path: os.Path, category: TestCategory)
 case class LoxTestResult(out: Seq[String], err: Seq[String], code: Int)
@@ -32,16 +33,16 @@ enum TestCategory:
 abstract class LoxTest(
     loxCommand: String, // TODO probably doesn't work with spaces
     testImplMarker: String,
-              ) extends munit.FunSuite:
+) extends munit.FunSuite:
 
-  val errorCode = 65
+  val errorCode        = 65
   val runtimeErrorCode = 70
 
   def executeFile(cmd: Seq[String]) =
     import scala.sys.process.*
 
-    val out = ByteArrayOutputStream()
-    val err = ByteArrayOutputStream()
+    val out       = ByteArrayOutputStream()
+    val err       = ByteArrayOutputStream()
     val outWriter = PrintWriter(out)
     val errWriter = PrintWriter(err)
 
@@ -55,11 +56,11 @@ abstract class LoxTest(
     LoxTestResult(out.toString.linesIterator.toSeq, err.toString.linesIterator.toSeq, exitCode)
 
   def categorize(test: os.Path) =
-    val expectedMarker = "// expect: "
-    val runtimeErrorMarker = "// expect runtime error: "
-    val staticErrorRegex = "^.*// \\[line.*"
-    val implStaticErrorRegex = s"^.*// \\[$testImplMarker line.*"
-    val staticErrorMarker = "// [line"
+    val expectedMarker        = "// expect: "
+    val runtimeErrorMarker    = "// expect runtime error: "
+    val staticErrorRegex      = "^.*// \\[line.*"
+    val implStaticErrorRegex  = s"^.*// \\[$testImplMarker line.*"
+    val staticErrorMarker     = "// [line"
     val implStaticErrorMarker = s"// [$testImplMarker line"
 
     val contents = os.read.lines(test)
@@ -75,23 +76,21 @@ abstract class LoxTest(
       TestCategory.ExpectedOutputs(expected)
     else if contents.exists(s => s.matches(staticErrorRegex) || s.matches(implStaticErrorRegex)) then
       val expected = contents
-      .filter(s => s.contains(staticErrorMarker) || s.contains(implStaticErrorMarker))
-      .map(_.split("// ").toSeq(1).replace(s"[$testImplMarker ", "["))
+        .filter(s => s.contains(staticErrorMarker) || s.contains(implStaticErrorMarker))
+        .map(_.split("// ").toSeq(1).replace(s"[$testImplMarker ", "["))
       TestCategory.Errors(expected)
-    else
-      TestCategory.ShouldWork
+    else TestCategory.ShouldWork
 
   val testsBasePath = os.pwd / "lox-tests"
 
   def skippedPaths(p: os.Path) =
-    // These files and folders are not part of the final jlox test suite
-    val jloxSkipList = Seq("benchmark", "limit", "nan_equality.lox", "scanning", "expressions", "comments")
+    // These files and folders are not part of the final test suite
+    val skipList = Seq("benchmark", "limit", "nan_equality.lox", "scanning", "expressions", "comments")
 
     val segments = p.relativeTo(testsBasePath).segments
-    jloxSkipList.exists(segments.contains) || segments.exists(_.startsWith("."))
+    skipList.exists(segments.contains) || segments.exists(_.startsWith("."))
 
   val loxTestFiles = os.walk(testsBasePath, skip = skippedPaths).filter(os.isFile)
-
 
   val loxTests = loxTestFiles.map: file =>
     LoxTestFile(file, categorize(file))
@@ -101,7 +100,7 @@ abstract class LoxTest(
     test(s"${loxTest.category.productPrefix} - $fileName") {
 
       val command = s"$loxCommand ${loxTest.path}".split(' ').toSeq
-      val result = executeFile(command)
+      val result  = executeFile(command)
 
       loxTest.category match
         case TestCategory.ExpectedOutputs(outputs) =>
@@ -114,7 +113,7 @@ abstract class LoxTest(
           // It's possible for some test files to print things before reaching the error, and stack
           // information will be after. Check all lines for the expected error message.
           assert(result.err.contains(error))
-          //assertEquals(result.err(result.err.length - 2), error)
+        // assertEquals(result.err(result.err.length - 2), error)
 
         case TestCategory.Errors(errors) =>
           assertEquals(result.code, errorCode)
@@ -127,4 +126,3 @@ abstract class LoxTest(
           // Do nothing
           ()
     }
-
