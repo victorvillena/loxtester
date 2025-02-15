@@ -1,11 +1,6 @@
 package org.willena.loxtester
 
-import scala.sys.{error, process}
-
-import java.io.{ByteArrayOutputStream, PrintWriter}
-
 case class LoxTestFile(path: os.Path, category: TestCategory)
-case class LoxTestResult(out: Seq[String], err: Seq[String], code: Int)
 
 // Fortunately, almost every test file focuses on either checking for correct outputs, or aiming for
 // a specific error. This allows us to classify each file into a category, and test it accordingly.
@@ -38,23 +33,6 @@ abstract class LoxTest(
   val errorCode        = 65
   val runtimeErrorCode = 70
 
-  def executeFile(cmd: Seq[String]) =
-    import scala.sys.process.*
-
-    val out       = ByteArrayOutputStream()
-    val err       = ByteArrayOutputStream()
-    val outWriter = PrintWriter(out)
-    val errWriter = PrintWriter(err)
-
-    val exitCode = cmd
-      .run(ProcessLogger(outWriter.println, errWriter.println))
-      .exitValue() // blocks until command finishes, ensuring we get the output
-
-    outWriter.close()
-    errWriter.close()
-
-    LoxTestResult(out.toString.linesIterator.toSeq, err.toString.linesIterator.toSeq, exitCode)
-
   def categorize(test: os.Path) =
     val expectedMarker        = "// expect: "
     val runtimeErrorMarker    = "// expect runtime error: "
@@ -81,7 +59,6 @@ abstract class LoxTest(
       TestCategory.Errors(expected)
     else TestCategory.ShouldWork
 
-  val testsBasePath = os.pwd / "lox-tests"
 
   def skippedPaths(p: os.Path) =
     // These files and folders are not part of the final test suite
@@ -112,8 +89,7 @@ abstract class LoxTest(
 
           // It's possible for some test files to print things before reaching the error, and stack
           // information will be after. Check all lines for the expected error message.
-          assert(result.err.contains(error))
-        // assertEquals(result.err(result.err.length - 2), error)
+          assert(result.err.contains(error), result)
 
         case TestCategory.Errors(errors) =>
           assertEquals(result.code, errorCode)

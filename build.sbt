@@ -11,6 +11,6 @@ lazy val root = (project in file("."))
     idePackagePrefix := Some("org.willena.loxtester"),
     libraryDependencies := Seq(
       "org.scalameta" %% "munit"  % "1.0.2"  % Test,
-      "com.lihaoyi"   %% "os-lib" % "0.10.7" % Test,
+      "com.lihaoyi"   %% "os-lib" % "0.10.7",
     ),
   )

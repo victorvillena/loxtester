@@ -18,3 +18,6 @@ test-custom:
 	@#          in the tests, it will have no effect. If not set, defaults to a value that will
 	@#          bypass all impl-specific checks.
 	sbt "testOnly *CustomTest -- \"-Dtest.command=$(command)\" -Dtest.impl=$(impl)"
+
+benchmark:
+	sbt "run \"$(command)\""
